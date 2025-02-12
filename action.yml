@@ -1,0 +1,39 @@
+---
+name: Setup Rust
+description: Set up rust and rust-cache.
+inputs:
+  toolchain:
+    description: Toolchain name.
+    default: stable
+    required: true
+  profile:
+    description: Rustup profile.
+    default: minimal
+    required: true
+  components:
+    description: Comma separated list of additional components.
+    required: false
+  cache-key:
+    description: Additional cache key for rust-cache.
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust
+      run: |
+        set -- "$TOOLCHAIN" --profile "$PROFILE"
+        if [[ -n "$COMPONENTS" ]]; then
+          set -- "$@" --component "$COMPONENTS"
+        fi
+        set -x
+        rustup toolchain install "$@" --no-self-update
+        rustup default "$TOOLCHAIN"
+      env:
+        TOOLCHAIN: ${{ inputs.toolchain }}
+        PROFILE: ${{ inputs.profile }}
+        COMPONENTS: ${{ inputs.components }}
+      shell: bash
+    - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      with:
+        key: ${{ inputs.cache-key }}
