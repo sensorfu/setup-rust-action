@@ -1,0 +1,41 @@
+---
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+          - beta
+        use-cache:
+          - true
+          - false
+
+    defaults:
+      run:
+        working-directory: tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          use-cache: ${{ matrix.use-cache }}
+          components: rustfmt
+          workspaces: tests
+
+      - run: cargo fmt --check
+      - run: cargo check
+      - run: cargo build --release
