@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  tests:
+  test-linux:
     runs-on: ubuntu-latest
 
     strategy:
@@ -32,6 +32,37 @@ jobs:
       - uses: ./
         with:
           toolchain: ${{ matrix.toolchain }}
+          use-cache: ${{ matrix.use-cache }}
+          components: rustfmt
+          workspaces: tests
+
+      - run: cargo fmt --check
+      - run: cargo check
+      - run: cargo build --release
+
+  test-windows:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        toolchain:
+          - stable-x86_64-pc-windows-msvc
+          - stable-i686-pc-windows-msvc
+        use-cache:
+          - true
+          - false
+
+    defaults:
+      run:
+        working-directory: tests
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          force-non-host: true
           use-cache: ${{ matrix.use-cache }}
           components: rustfmt
           workspaces: tests

@@ -13,6 +13,10 @@ inputs:
   components:
     description: Comma separated list of additional components.
     required: false
+  force-non-host:
+    description: Allow non-host toolchain to be installed.
+    default: false
+    required: false
   use-cache:
     description: Use rust-cache.
     default: true
@@ -33,13 +37,24 @@ runs:
         if [[ -n "$COMPONENTS" ]]; then
           set -- "$@" --component "$COMPONENTS"
         fi
+        if "$FORCE_NON_HOST"; then
+          set -- "$@" --force-non-host
+        fi
         set -x
         rustup toolchain install "$@" --no-self-update
-        rustup default "$TOOLCHAIN"
+
+        set +x
+        set -- "$TOOLCHAIN"
+        if "$FORCE_NON_HOST"; then
+          set -- "$@" --force-non-host
+        fi
+        set -x
+        rustup default "$@"
       env:
         TOOLCHAIN: ${{ inputs.toolchain }}
         PROFILE: ${{ inputs.profile }}
         COMPONENTS: ${{ inputs.components }}
+        FORCE_NON_HOST: ${{ case(inputs.force-non-host == 'true', 'true', 'false') }}
       shell: bash
 
     - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
